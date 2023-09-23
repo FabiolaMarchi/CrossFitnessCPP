@@ -2,64 +2,9 @@
 #include<fstream>
 #include<map>
 #include "crow.h"
-#include "json.hpp"
 #include <stdio.h>
-#include <Windows.h>
+//#include <Windows.h>
 using namespace std;
-using json = nlohmann::json;
-class Prenotazione {
-public:
-
-    int IDPrenotazione;
-    int IDPersona;
-    string Username;
-    string lezione;
-    vector<string> LezioneList; 
-    map<int, string> LezioniDict;
-
-    int getIDPrenotazione(){ return IDPrenotazione; }
-    int getIDPersona(){ return IDPersona; }
-    string getUsername(){ return Username; }
-    string getLezioneStr() { return lezione; }
-
-    string getLezione()
-    {
-        string s = "";
-        for(int i =0; i < LezioneList.size(); i++)
-        {
-            s += LezioneList[i];
-            s += " ";
-        }
-        return s;
-    }
-    void setIDPrenotazione(int IDPren){ IDPrenotazione = IDPren; }
-
-    void setIDPersona(int IDPers){ IDPersona = IDPers; }
-
-    void setUsername(string name){ Username = name; }
-
-    void setLezioneStr(string lez) { lezione = lez; }
-
-    void setLezione(string lezione){LezioneList.push_back(lezione); }
-
-    void setLezioneDict(map<int, string> dict) { LezioniDict = dict; };
-
-    string showPrenotazione()
-    {
-        string s;
-        s = "ID Prenotazione : " + to_string(getIDPrenotazione()) + "\n" +
-            "ID Persona : " + to_string(getIDPersona()) + "\n" + "Username :" + getUsername() +
-            "\n" + "Prenotazione: " + getLezione() + "\n";
-        return s;
-    }       
-
-    Prenotazione()
-    {
-
-    }
-       
-    
-};
 
 map<string, string> caricaFile() {
     
@@ -80,18 +25,10 @@ map<string, string> caricaFile() {
 
 
 int main()
-{
-    std::cout << "Hello World!\n";     
-    crow::SimpleApp app;
-    
-
-    CROW_ROUTE(app, "/json")
-        ([] {
-        crow::json::wvalue x({ {"zmessage", "Hello, World!"},
-                              {"amessage", "Hello, World2!"} });
-    return x;
-    });
-
+{     
+    cout << "Avvio del server ...\n" << endl;
+    crow::SimpleApp app;    
+        
     CROW_ROUTE(app, "/login")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
         string json_psw, json_nome, res;     
@@ -115,8 +52,7 @@ int main()
         else
             return crow::response(400);       
        
-    });      
-             
+    });                
 
     CROW_ROUTE(app, "/crea_account")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
@@ -134,56 +70,37 @@ int main()
             file << tmp;
             file.close();
             return crow::response(200);
-        }
-            
+        }           
             
     });
 
     CROW_ROUTE(app, "/prenotazioni")
-        .methods("POST"_method, "DELETE"_method)([](const crow::request& req) {
-        
-        Prenotazione p;
-        string tmp;
-        std::string Utente = req.body;
+        .methods("POST"_method)([](const crow::request& req) {   
+                      
         auto json_data = crow::json::load(req.body);
-        if (req.method == "POST"_method) {
-            
-            
-            p.setUsername(json_data["Username:"].s());
-            p.setIDPrenotazione(json_data["IDPrenotazione:"].i());
-            p.setIDPersona(json_data["IDPersona:"].i());
-            p.setLezione(json_data["LezioneStr:"].s());
-            string usr = json_data["Username:"].s();
-            int IDpr = json_data["IDPrenotazione:"].i();
-            int IDp = json_data["IDPersona:"].i();
-            string lez = json_data["LezioneStr:"].s();
-            
+        string usr = json_data["Username:"].s();
+        int IDpr = json_data["IDPrenotazione:"].i();
+        int IDp = json_data["IDPersona:"].i();
+        string lez = json_data["LezioneStr:"].s();
+
+        if (lez != "") {                       
             ofstream file(usr + ".txt", ios::app);
             file.eof();
             file << lez;
-            file.close();          
-                              
-            cout << "PRENOTAZIONE: \n" << p.showPrenotazione() << endl;
-
-            if (Utente == "")
+            file.close();         
+                                         
+            if (req.body == "")
                 return crow::response(400);
             else
                 return crow::response(200);
         }
-        else if (req.method == "DELETE"_method)
-        {
-            string usr = json_data["Username:"].s();
-            //ofstream fout(usr + ".txt");            
+        else if (lez == "")
+        {     
             string nomeFile = usr + ".txt";
             if (remove(nomeFile.c_str()) == 0) {
                 return crow::response(200);
             }
             else return crow::response(400);
-
-            //fout << " ";
-            //fout.close();            
-            
-           
         }
     });
         
