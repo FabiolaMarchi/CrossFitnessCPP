@@ -3,7 +3,7 @@
 #include<map>
 #include "crow.h"
 #include <stdio.h>
-//#include <Windows.h>
+
 using namespace std;
 
 map<string, string> caricaFile() {
@@ -22,8 +22,6 @@ map<string, string> caricaFile() {
     return users;
 }
 
-
-
 int main()
 {     
     cout << "Avvio del server ...\n" << endl;
@@ -31,18 +29,16 @@ int main()
         
     CROW_ROUTE(app, "/login")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
-        string json_psw, json_nome, res;     
-       
+
+        string json_psw, json_nome, res, line, nome;
         auto json_data = crow::json::load(req.body);
         json_nome = json_data["User:"].s();        
         json_psw = json_data["Password:"].s();        
 
         map<string, string> users = caricaFile();
         
-        ifstream file1(json_nome + ".txt");
-        
-        string line, nome;
-        
+        ifstream file1(json_nome + ".txt");       
+               
         while (std::getline(file1, line)) {                       
             res += line +  '\n';            
         }
@@ -56,6 +52,7 @@ int main()
 
     CROW_ROUTE(app, "/crea_account")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
+
         string json_psw, json_nome, tmp;        
         auto json_data = crow::json::load(req.body);
         json_nome = json_data["User:"].s();
@@ -70,8 +67,7 @@ int main()
             file << tmp;
             file.close();
             return crow::response(200);
-        }           
-            
+        }                       
     });
 
     CROW_ROUTE(app, "/prenotazioni")
