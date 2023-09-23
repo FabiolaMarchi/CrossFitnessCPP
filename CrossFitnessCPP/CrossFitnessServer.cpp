@@ -3,6 +3,8 @@
 #include<map>
 #include "crow.h"
 #include "json.hpp"
+#include <stdio.h>
+#include <Windows.h>
 using namespace std;
 using json = nlohmann::json;
 class Prenotazione {
@@ -76,6 +78,7 @@ map<string, string> caricaFile() {
 }
 
 
+
 int main()
 {
     std::cout << "Hello World!\n";     
@@ -98,7 +101,7 @@ int main()
         json_psw = json_data["Password:"].s();        
 
         map<string, string> users = caricaFile();
-        cout << "ciao: \n" <<  endl;
+        
         ifstream file1(json_nome + ".txt");
         
         string line, nome;
@@ -142,9 +145,10 @@ int main()
         Prenotazione p;
         string tmp;
         std::string Utente = req.body;
+        auto json_data = crow::json::load(req.body);
         if (req.method == "POST"_method) {
             
-            auto json_data = crow::json::load(req.body);
+            
             p.setUsername(json_data["Username:"].s());
             p.setIDPrenotazione(json_data["IDPrenotazione:"].i());
             p.setIDPersona(json_data["IDPersona:"].i());
@@ -168,10 +172,17 @@ int main()
         }
         else if (req.method == "DELETE"_method)
         {
-            ofstream fout("Prenotazione.txt");
-            fout << " ";
-            fout.close();            
-            return crow::response(200);
+            string usr = json_data["Username:"].s();
+            //ofstream fout(usr + ".txt");            
+            string nomeFile = usr + ".txt";
+            if (remove(nomeFile.c_str()) == 0) {
+                return crow::response(200);
+            }
+            else return crow::response(400);
+
+            //fout << " ";
+            //fout.close();            
+            
            
         }
     });
