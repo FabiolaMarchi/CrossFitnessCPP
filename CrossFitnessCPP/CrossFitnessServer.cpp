@@ -27,6 +27,26 @@ int main()
     cout << "Avvio del server ...\n" << endl;
     crow::SimpleApp app;    
         
+    CROW_ROUTE(app, "/lezioni")
+        .methods("GET"_method)([](const crow::request& req) {
+
+        ifstream file("lezioni.txt");      
+        string line;
+        string postlezione;       
+
+        while (std::getline(file, line))
+        {
+            postlezione += line + '\n';
+        }
+        file.close();
+
+        if (postlezione != "")
+            return crow::response(postlezione);      
+        else
+            return crow::response(400);
+
+    });
+
     CROW_ROUTE(app, "/login")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
 
