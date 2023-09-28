@@ -21,6 +21,20 @@ map<string, string> caricaFile() {
     file.close();
     return users;
 }
+int cercaInFile(string filename, string lezione) {
+
+    ifstream file(filename);    
+    string line;
+    int flag = 0;
+    while (std::getline(file, line)) {
+        if (line == lezione) {
+            flag++;
+        }       
+        
+    }
+    file.close();
+    return flag;
+}
 
 int main()
 {     
@@ -89,37 +103,35 @@ int main()
             return crow::response(200);
         }                       
     });
-
     CROW_ROUTE(app, "/prenotazioni")
-        .methods("POST"_method)([](const crow::request& req) {   
-                      
-        auto json_data = crow::json::load(req.body);
-        string usr = json_data["Username:"].s();
-        int IDpr = json_data["IDPrenotazione:"].i();
-        int IDp = json_data["IDPersona:"].i();
-        string lez = json_data["LezioneStr:"].s();
+        .methods("POST"_method)([](const crow::request& req) {
 
-        if (lez != "") {                       
-            ofstream file(usr + ".txt", ios::app);
-            file.eof();
-            file << lez;
-            file.close();         
-                                         
-            if (req.body == "")
-                return crow::response(400);
-            else
+        auto json_data = crow::json::load(req.body);
+        string usr = json_data["Username:"].s();        
+        string lez = json_data["Lezione:"].s();
+        string filename = usr + ".txt";
+        if (lez != "") {
+            if (cercaInFile(filename, lez) == 0) {
+                ofstream file(usr + ".txt", ios::app);
+                file.eof();
+                file << lez;
+                file.close();
                 return crow::response(200);
+            }
+                          
+            else
+                return crow::response(400);
         }
-        else if (lez == "")
-        {     
-            string nomeFile = usr + ".txt";
-            if (remove(nomeFile.c_str()) == 0) {
+        else if (lez == "") {            
+            if (remove(filename.c_str()) == 0) {
                 return crow::response(200);
             }
             else return crow::response(400);
         }
-    });
         
+        
+
+            });   
 
     app.port(60080).run();
 }
