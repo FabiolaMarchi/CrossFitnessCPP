@@ -114,7 +114,7 @@ int main()
             if (cercaInFile(filename, lez) == 0) {
                 ofstream file(usr + ".txt", ios::app);
                 file.eof();
-                file << lez;
+                file << lez + "\n";
                 file.close();
                 return crow::response(200);
             }
@@ -128,10 +128,31 @@ int main()
             }
             else return crow::response(400);
         }
-        
-        
-
             });   
+
+    CROW_ROUTE(app, "/user")
+        .methods("POST"_method)([](const crow::request& req) {
+        auto json_data = crow::json::load(req.body);
+        //string usr = json_data["Username:"].s();
+        string usr = json_data.s();
+        string ciao = req.body;
+        string filename = usr + ".txt";
+        ifstream file(filename);
+        string line;
+        string postlezione;
+
+        while (std::getline(file, line))
+        {
+            postlezione += line + '\n';
+        }
+        file.close();
+
+        if (postlezione != "")
+            return crow::response(postlezione);
+        else
+            return crow::response(400);
+
+            });
 
     app.port(60080).run();
 }
