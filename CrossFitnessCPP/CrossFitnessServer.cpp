@@ -61,6 +61,56 @@ int main()
 
     });
 
+    CROW_ROUTE(app, "/reservation")
+        .methods("GET"_method)([](const crow::request& req) {
+
+        string reservation;
+        ifstream file("User.txt");
+        map<string, string> users;
+        string line, usr;
+
+        while (std::getline(file, line)) {
+            istringstream iss(line);
+            getline(iss, usr, ';');
+            ifstream file(usr + ".txt");
+            string line;
+            string getlezione;
+            while (std::getline(file, line))
+            {
+                getlezione += line + '\n';
+            }
+            file.close();
+            reservation += getlezione;
+        }
+        file.close();
+
+        if (reservation != "")
+            return crow::response(reservation);
+        else
+            return crow::response(400);
+
+            });
+
+    CROW_ROUTE(app, "/reservation/<string>")
+        ([](string usr)
+            {
+                ifstream file(usr + ".txt");
+
+                string line;
+                string getlezione;
+
+                while (std::getline(file, line))
+                {
+                    getlezione += line + '\n';
+                }
+                file.close();
+
+                if (getlezione != "")
+                    return crow::response(getlezione);
+                else
+                    return crow::response(400);
+            });
+
     CROW_ROUTE(app, "/login")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
 
