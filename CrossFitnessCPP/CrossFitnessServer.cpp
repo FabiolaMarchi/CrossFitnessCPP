@@ -14,7 +14,6 @@ public:
     }
 };
 
-
 map<string, string> caricaFile() {
     try {
         ifstream file("User.txt");
@@ -57,8 +56,9 @@ int cercaInFile(string filename, string lezione) {
         return flag;
     }
     catch (myExceptionFile ex) {
-        cerr << "Error: " << ex.what() << endl;
-        return {};
+        cerr << "Error: " << ex.what() << endl;       
+        return {};           
+        
     }
     
 }
@@ -70,75 +70,96 @@ int main()
         
     CROW_ROUTE(app, "/lezioni")
         .methods("GET"_method)([](const crow::request& req) {
+        try {
+            ifstream file("lezioni.txt");
+            if (!file.is_open()) {
+                throw myExceptionFile();
+            }
+            string line;
+            string postlezione;
 
-        ifstream file("lezioni.txt");      
-        string line;
-        string postlezione;       
+            while (std::getline(file, line))
+            {
+                postlezione += line + '\n';
+            }
+            file.close();
 
-        while (std::getline(file, line))
-        {
-            postlezione += line + '\n';
+            if (postlezione != "")
+                return crow::response(postlezione);
+            else if (postlezione == "") {                
+                return crow::response(501);
+            }
         }
-        file.close();
-
-        if (postlezione != "")
-            return crow::response(postlezione);      
-        else if (postlezione == "") {
-            throw invalid_argument("file vuoto");
-            return crow::response(400);
-        }
-            
+        catch (myExceptionFile ex) {
+            cerr << "Error: " << ex.what() << endl;
+            return crow::response(500);    
+        }                      
 
     });
 
     CROW_ROUTE(app, "/reservation")
         .methods("GET"_method)([](const crow::request& req) {
-
         string reservation;
-        ifstream file("User.txt");
-        map<string, string> users;
-        string line, usr;
-
-        while (std::getline(file, line)) {
-            istringstream iss(line);
-            getline(iss, usr, ';');
-            ifstream file(usr + ".txt");
-            string line;
-            string getlezione;
-            while (std::getline(file, line))
-            {
-                getlezione += line + '\n';
+        try {
+            ifstream file("User.txt");
+            if (!file.is_open()) {
+                throw myExceptionFile();
             }
-            file.close();
-            reservation += getlezione;
-        }
-        file.close();
+            map<string, string> users;
+            string line, usr;
 
-        if (reservation != "")
-            return crow::response(reservation);
-        else
-            return crow::response(400);
-
-            });
-
-    CROW_ROUTE(app, "/reservation/<string>")
-        ([](string usr)
-            {
+            while (std::getline(file, line)) {
+                istringstream iss(line);
+                getline(iss, usr, ';');
                 ifstream file(usr + ".txt");
-
                 string line;
                 string getlezione;
-
                 while (std::getline(file, line))
                 {
                     getlezione += line + '\n';
                 }
                 file.close();
+                reservation += getlezione;
+            }
+            file.close();
 
-                if (getlezione != "")
-                    return crow::response(getlezione);
-                else
-                    return crow::response(400);
+            if (reservation != "")
+                return crow::response(reservation);
+            else
+                return crow::response(501);
+        }
+        catch (myExceptionFile ex) {
+            cerr << "Error: " << ex.what() << endl;
+            return crow::response(500);
+        }       
+
+            });
+
+    CROW_ROUTE(app, "/reservation/<string>")([](string usr){
+        try {
+            ifstream file(usr + ".txt");
+            if (!file.is_open()) {
+                throw myExceptionFile();
+            }
+            string line;
+            string getlezione;
+
+            while (std::getline(file, line))
+            {
+                getlezione += line + '\n';
+            }
+            file.close();
+
+            if (getlezione != "")
+                return crow::response(getlezione);
+            else
+                return crow::response(500);
+        }
+        catch (myExceptionFile ex) {
+            cerr << "Error: " << ex.what() << endl;
+            return crow::response(501);
+        }
+                
             });
 
     CROW_ROUTE(app, "/login")
@@ -150,19 +171,13 @@ int main()
         json_psw = json_data["Password:"].s();        
 
         map<string, string> users = caricaFile();
-        
-        ifstream file1(json_nome + ".txt");       
-               
-        while (std::getline(file1, line)) {                       
-            res += line +  '\n';            
-        }
-        file1.close();
-        if (users.find(json_nome) != users.end() && users[json_nome] == json_psw)             
-            return crow::response(res);                     
+        if (users.find(json_nome) != users.end() && users[json_nome] == json_psw)
+
+            return crow::response(200);
         else
-            return crow::response(400);       
-       
-    });                
+            return crow::response(501);       
+              
+       });                
 
     CROW_ROUTE(app, "/crea_account")
         .methods("POST"_method, "GET"_method)([](const crow::request& req) {
@@ -176,11 +191,20 @@ int main()
             return crow::response(400);
         else
         {
-            ofstream file("User.txt", ios::app);
-            file.eof();
-            file << tmp << "\n";
-            file.close();
-            return crow::response(200);
+            try {
+                ofstream file("User.txt", ios::app);
+                if (!file.is_open()) {
+                    throw myExceptionFile();
+                }
+                file.eof();
+                file << tmp << "\n";
+                file.close();
+                return crow::response(200);
+            }
+            catch (myExceptionFile ex) {
+                cerr << "Error: " << ex.what() << endl;
+                return crow::response(501);
+            }            
         }                       
     });
     CROW_ROUTE(app, "/prenotazioni")
@@ -192,15 +216,22 @@ int main()
         string filename = usr + ".txt";
         if (lez != "") {
             if (cercaInFile(filename, lez) == 0) {
-                ofstream file(usr + ".txt", ios::app);
-                file.eof();
-                file << lez + "\n";
-                file.close();
-                return crow::response(200);
+                try {
+                    ofstream file(usr + ".txt", ios::app);
+                    file.eof();
+                    file << lez + "\n";
+                    file.close();
+                    return crow::response(200);
+                }
+                catch (myExceptionFile ex) {
+                    cerr << "Error: " << ex.what() << endl;
+                    return crow::response(500);
+                }
+               
             }
                           
             else
-                return crow::response(400);
+                return crow::response(501);
         }
         else if (lez == "") {            
             if (remove(filename.c_str()) == 0) {
@@ -213,24 +244,29 @@ int main()
     CROW_ROUTE(app, "/user")
         .methods("POST"_method)([](const crow::request& req) {
         auto json_data = crow::json::load(req.body);
-        //string usr = json_data["Username:"].s();
+    
         string usr = json_data.s();
-        string ciao = req.body;
         string filename = usr + ".txt";
-        ifstream file(filename);
-        string line;
-        string postlezione;
+        try {
+            ifstream file(filename);
+            string line;
+            string postlezione;
 
-        while (std::getline(file, line))
-        {
-            postlezione += line + '\n';
+            while (std::getline(file, line))
+            {
+                postlezione += line + '\n';
+            }
+            file.close();
+
+            if (postlezione != "")
+                return crow::response(postlezione);
+            else
+                return crow::response(501);
         }
-        file.close();
-
-        if (postlezione != "")
-            return crow::response(postlezione);
-        else
-            return crow::response(400);
+        catch (myExceptionFile ex) {
+            cerr << "Error: " << ex.what() << endl;
+            return crow::response(500);
+        }
 
             });
 
