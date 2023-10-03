@@ -3,37 +3,64 @@
 #include<map>
 #include "crow.h"
 #include <stdio.h>
+#include <stdexcept>
 
 using namespace std;
 
-map<string, string> caricaFile() {
-    
-    ifstream file("User.txt");
-    map<string, string> users;
-    string line, nome;
-    string psw;
-    while (std::getline(file, line)) {
-        istringstream iss(line);
-        getline(iss, nome, ';');
-        getline(iss, psw, ';');
-        users.insert({ nome, psw });
+class myExceptionFile : public std::exception {
+public:
+    const char * what() {
+       return "Impossibile aprire il file";
     }
-    file.close();
-    return users;
-}
-int cercaInFile(string filename, string lezione) {
+};
 
-    ifstream file(filename);    
-    string line;
-    int flag = 0;
-    while (std::getline(file, line)) {
-        if (line == lezione) {
-            flag++;
-        }       
+
+map<string, string> caricaFile() {
+    try {
+        ifstream file("User.txt");
+        if (!file.is_open()) {
+            throw myExceptionFile();            
+        }
+        map<string, string> users;
+        string line, nome;
+        string psw;
+        while (std::getline(file, line)) {
+            istringstream iss(line);
+            getline(iss, nome, ';');
+            getline(iss, psw, ';');
+            users.insert({ nome, psw });
+        }
+        file.close();
+        return users;
         
     }
-    file.close();
-    return flag;
+    catch(myExceptionFile ex){        
+        cerr << "Error: " << ex.what() << endl;
+        return {};
+    }
+    
+}
+int cercaInFile(string filename, string lezione) {
+    try {
+        ifstream file(filename);
+        if (!file.is_open()) {
+            throw myExceptionFile();
+        }
+        string line;
+        int flag = 0;
+        while (std::getline(file, line)) {
+            if (line == lezione) {
+                flag++;
+            }
+        }
+        file.close();
+        return flag;
+    }
+    catch (myExceptionFile ex) {
+        cerr << "Error: " << ex.what() << endl;
+        return {};
+    }
+    
 }
 
 int main()
@@ -56,8 +83,11 @@ int main()
 
         if (postlezione != "")
             return crow::response(postlezione);      
-        else
+        else if (postlezione == "") {
+            throw invalid_argument("file vuoto");
             return crow::response(400);
+        }
+            
 
     });
 
@@ -98,7 +128,7 @@ int main()
         {
             ofstream file("User.txt", ios::app);
             file.eof();
-            file << tmp;
+            file << tmp << "\n";
             file.close();
             return crow::response(200);
         }                       
