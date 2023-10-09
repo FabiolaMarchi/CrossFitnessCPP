@@ -163,7 +163,7 @@ int main()
             });
 
     CROW_ROUTE(app, "/login")
-        .methods("POST"_method, "GET"_method)([](const crow::request& req) {
+        .methods("POST"_method)([](const crow::request& req) {
 
         string json_psw, json_nome, res, line, nome;
         auto json_data = crow::json::load(req.body);
@@ -180,7 +180,7 @@ int main()
        });                
 
     CROW_ROUTE(app, "/crea_account")
-        .methods("POST"_method, "GET"_method)([](const crow::request& req) {
+        .methods("POST"_method)([](const crow::request& req) {
 
         string json_psw, json_nome, tmp;        
         auto json_data = crow::json::load(req.body);
