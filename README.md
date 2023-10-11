@@ -1,16 +1,15 @@
 # CrossFitnessCPP
 
-Server dell' applicazione Cross Fitness
-La comunicatrione con i client ADMIN e USER avviene mediante REST-API, lo stagage delle infomazioen e' gestito tramite file di testo. 
+Server dell' applicazione Cross Fitness.
+Prevede l'implementazione della comunicazione con i client C# (User) e Python (Admin) mediante REST API request sulla porta 60080, gestite attraverso al libreria "CROW".
+Lo storage dei dati si gestisce mediante dei file di testo.
 
-Tramite la libreria CROW ROUTE sono state implementate le rest API (port:60080) che permettono di gestire: 
+Di seguito si presentano le REST API implementate:
+1. GET: http://localhost:60080/lezioni -> Per ottenere tutte le lezioni prenotabili 
+2. GET: http://localhost:60080/reservation -> Per ottenere tutte le prenotazioni effettuate dagli utenti 
+3. GET: http://localhost:60080//reservation/<string> -> Per ottenere le prenotazioni di un utente
 
-1. GET: /lezioni -> Ottenere tutte le lezioni prenotabili salvarte nel file lezioni.txt
-2. GET: /reservation -> Ottenere tutte le prenotazioni da tutti gli utenti registrati (Analissi dell' affluenza)
-3. GET: /reservation/<string> -> Ottenere tutte le prenotazioni del singolo utente
-
-4. POST: /login -> IN: username e pws -> Viene eseguita una ricerca nel file User.txt -> OUT: 200=good 501=bad  
-5. POST: /crea_account -> IN: username e pws -> Viene aggiuta una linea nel file User.txt (NO controllo duplicati) -> OUT: 200=good 501=bad  
-6. POST: /prenotazioni -> IN: list<string> -> Viene aggiuta una o più linee nel file <username>.txt (SI controllo duplicati) -> OUT: 200=good 501=bad OTHERS=error
-7. POST: /prenotazioni -> IN: list VUOTA -> Viene cancellato il file <username>.txt -> OUT: 200=good 400=bad 
-8. POST: /user -> IN: username -> Viene restituite le prenotazzioni toprovate nel file <username>.txt -> OUT: 200=good 501=bad 500=ServerERROR
+4. POST: http://localhost:60080/login -> Il client C# invia le credenziali dell'utente e viene effettuata una verifica di correttezza/esistenza 
+5. POST: http://localhost:60080/crea_account ->Il client C# invia le credenziali dell'utente per creare l'account
+6. POST: http://localhost:60080/prenotazioni ->Il client C# invia i dati per effettuare una prenotazione, nel caso in cui sia inviato solo lo username allora tutte le prenotazioni ad esso correlate vengono eliminate
+7. POST: http://localhost:60080/user -> Il client C# invia i dati dell'utente per visualizzare le prenotazioni effettuare
