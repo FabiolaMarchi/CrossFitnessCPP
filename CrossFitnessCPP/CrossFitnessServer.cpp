@@ -7,6 +7,7 @@
 
 using namespace std;
 
+// Customized exception class occurs when opening file is wrong
 class myExceptionFile : public std::exception {
 public:
     const char * what() {
@@ -14,6 +15,7 @@ public:
     }
 };
 
+//Function to load users from file
 map<string, string> caricaFile() {
     try {
         ifstream file("User.txt");
@@ -39,6 +41,8 @@ map<string, string> caricaFile() {
     }
     
 }
+
+//Function to search in file a lesson to verify reservation
 int cercaInFile(string filename, string lezione) {
     try {
         ifstream file(filename);
@@ -67,7 +71,8 @@ int main()
 {     
     cout << "Avvio del server ...\n" << endl;
     crow::SimpleApp app;    
-        
+     
+    //GET on http://localhost:60080/lezioni to show all lesson available used from C# client (User) and Python Client (Admin)
     CROW_ROUTE(app, "/lezioni")
         .methods("GET"_method)([](const crow::request& req) {
         try {
@@ -97,6 +102,7 @@ int main()
 
     });
 
+    //GET on http://localhost:60080/reservation to show all reservation used form Python Client (Admin)
     CROW_ROUTE(app, "/reservation")
         .methods("GET"_method)([](const crow::request& req) {
         string reservation;
@@ -134,7 +140,7 @@ int main()
         }       
 
             });
-
+    //GET on http://localhost:60080/reservation/<string> to show user's reservation used form Python Client (Admin)
     CROW_ROUTE(app, "/reservation/<string>")([](string usr){
         try {
             ifstream file(usr + ".txt");
@@ -161,9 +167,9 @@ int main()
         }
                 
             });
-
+    //POST on http://localhost:60080/login to verify users's credentials sent from C# Client (User)
     CROW_ROUTE(app, "/login")
-        .methods("POST"_method, "GET"_method)([](const crow::request& req) {
+        .methods("POST"_method)([](const crow::request& req) {
 
         string json_psw, json_nome, res, line, nome;
         auto json_data = crow::json::load(req.body);
@@ -178,9 +184,9 @@ int main()
             return crow::response(501);       
               
        });                
-
+    //POST on http://localhost:60080/crea_account to create a user account, credentials sent from C# Client (User)
     CROW_ROUTE(app, "/crea_account")
-        .methods("POST"_method, "GET"_method)([](const crow::request& req) {
+        .methods("POST"_method)([](const crow::request& req) {
 
         string json_psw, json_nome, tmp;        
         auto json_data = crow::json::load(req.body);
@@ -207,6 +213,8 @@ int main()
             }            
         }                       
     });
+
+    //POST on http://localhost:60080/prenotazioni to make/delete a reservation, data sent from C# Client (User)
     CROW_ROUTE(app, "/prenotazioni")
         .methods("POST"_method)([](const crow::request& req) {
 
@@ -240,7 +248,7 @@ int main()
             else return crow::response(400);
         }
             });   
-
+    //POST on http://localhost:60080/user to show user's reservation on C# Client (User)
     CROW_ROUTE(app, "/user")
         .methods("POST"_method)([](const crow::request& req) {
         auto json_data = crow::json::load(req.body);
